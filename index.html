@@ -158,13 +158,18 @@ html.inv-ready .audio-toggle{display:flex;}
   font-size:8.5px;font-weight:400;letter-spacing:3.2px;text-transform:uppercase;
   color:rgba(45,58,48,0.75);margin-top:12px;
 }
-.hero-cta{
-  margin-top:0;padding:14px 36px;font-family:inherit;
-  font-size:9px;letter-spacing:3px;text-transform:uppercase;
-  border:none;background:#2f3d30;color:var(--paper);cursor:pointer;
-  border-radius:2px;box-shadow:0 6px 24px rgba(20,28,22,0.35);
+.hero-venue{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;
+  font-size:clamp(14px,4vw,17px);color:#2c261f;margin-top:10px;
+  text-shadow:0 0 14px rgba(255,252,248,0.8);
 }
-.hero-cta:active{opacity:0.92;}
+.hero-scroll-hint{
+  margin-top:0;padding:12px 18px;font-family:inherit;
+  font-size:7.5px;font-weight:300;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(45,58,48,0.58);background:transparent;border:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.hero-scroll-hint:active{opacity:0.65;}
 .hero-chev{
   display:block;margin-top:16px;font-size:18px;color:#7d6b4a;opacity:0.55;
   animation:chv 2s ease-in-out infinite;
@@ -296,22 +301,7 @@ html.inv-ready .audio-toggle{display:flex;}
 .faq-item p{font-size:11px;font-weight:300;color:var(--ink-muted);line-height:1.7;}
 
 /* RSVP */
-.rsvp-block{padding:36px 20px 48px;background:var(--paper);border-top:1px solid rgba(196,176,138,0.25);}
-.rsvp-block h3{text-align:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;margin-bottom:22px;color:var(--olive);}
-.rsvp-form{max-width:340px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
-.rsvp-form label{font-size:10px;font-weight:400;color:var(--ink-muted);display:flex;flex-direction:column;gap:6px;text-align:left;}
-.rsvp-form input,.rsvp-form textarea,.rsvp-form select{
-  font-family:inherit;font-size:13px;padding:12px 14px;border:1px solid rgba(125,139,114,0.35);
-  border-radius:2px;background:#fff;
-}
-.rsvp-form button[type="submit"]{
-  margin-top:8px;padding:14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;
-  border:none;background:var(--olive);color:var(--paper);cursor:pointer;border-radius:2px;
-}
-.rsvp-done{display:none;text-align:center;padding:24px;font-size:13px;color:var(--olive-soft);}
-.rsvp-done.on{display:block;}
-
-.kids-note{text-align:center;font-size:11px;font-style:italic;color:var(--ink-muted);padding:0 24px 32px;background:var(--paper);}
+.kids-note{text-align:center;font-size:11px;font-style:italic;color:var(--ink-muted);padding:36px 24px 32px;background:var(--paper);border-top:1px solid rgba(196,176,138,0.2);}
 
 /* Footer */
 .ft{
@@ -377,10 +367,11 @@ html.inv-ready .audio-toggle{display:flex;}
         <p class="hero-family rev" data-rev style="transition-delay:.1s">Sevgiyle bekliyoruz</p>
         <p class="hero-date rev" data-rev style="transition-delay:.2s">1 Mayıs 2026</p>
         <p class="hero-dress rev" data-rev style="transition-delay:.25s">Cuma · 19.00</p>
+        <p class="hero-venue rev" data-rev style="transition-delay:.28s">Esenler Balo Merkezi</p>
       </div>
       <div class="hero-actions">
-        <button type="button" class="hero-cta rev" data-rev style="transition-delay:.3s" id="toRsvp">Katılımını bildir</button>
-        <span class="hero-chev rev" data-rev style="transition-delay:.35s" aria-hidden="true">⌄</span>
+        <button type="button" class="hero-scroll-hint rev" data-rev style="transition-delay:.32s" id="heroScrollHint" aria-label="Aşağı kaydır, geri sayıma git">Devam etmek için kaydırın</button>
+        <span class="hero-chev rev" data-rev style="transition-delay:.38s" aria-hidden="true">⌄</span>
       </div>
     </div>
   </section>
@@ -502,32 +493,6 @@ html.inv-ready .audio-toggle{display:flex;}
       <p>Detaylar için çiftimizle iletişime geçebilirsiniz.</p>
     </div>
   </div>
-
-  <section class="rsvp-block" id="rsvp">
-    <h3>Katılım</h3>
-    <p class="rsvp-done" id="rsvpDone">Teşekkürler — mesajınız alındı.</p>
-    <form class="rsvp-form" id="rsvpForm">
-      <label>Ad Soyad *
-        <input name="name" type="text" required placeholder="Adınız Soyadınız" autocomplete="name">
-      </label>
-      <label>E-posta
-        <input name="email" type="email" placeholder="ornek@email.com" autocomplete="email">
-      </label>
-      <label>Katılım *
-        <select name="attend" required>
-          <option value="yes">Evet, katılacağım</option>
-          <option value="no">Katılamayacağım</option>
-        </select>
-      </label>
-      <label>Kişi sayısı (siz dahil)
-        <input name="guests" type="number" min="1" max="10" value="1">
-      </label>
-      <label>Mesaj
-        <textarea name="note" rows="3" placeholder="Özel notunuz"></textarea>
-      </label>
-      <button type="submit">Gönder</button>
-    </form>
-  </section>
 
   <p class="kids-note" id="kids">Sevgili miniklerimize iyi geceler dileriz.</p>
 
@@ -663,14 +628,8 @@ if(params.has('noIntro')){
   goToMain();
 }
 
-document.getElementById('toRsvp').addEventListener('click',function(){
-  document.getElementById('rsvp').scrollIntoView({behavior:'smooth'});
-});
-
-document.getElementById('rsvpForm').addEventListener('submit',function(e){
-  e.preventDefault();
-  document.getElementById('rsvpForm').style.display='none';
-  document.getElementById('rsvpDone').classList.add('on');
+document.getElementById('heroScrollHint').addEventListener('click',function(){
+  document.getElementById('countdown').scrollIntoView({behavior:'smooth'});
 });
 
 (function(){
