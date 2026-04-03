@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="tr" class="intro-lock">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FEF5DD">
+<title>Hatice & Ömer — Nişan Daveti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Great+Vibes&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+:root{
+  --cream:#F7F2EA;
+  --cream-hero:#FEF5DD;
+  --paper:#FDFBF7;
+  --olive:#3D4538;
+  --olive-deep:#2C3228;
+  --olive-soft:#5A6354;
+  --sage:#7D8B72;
+  --rose-seal:#E8A0B0;
+  --rose-seal-deep:#C77B8E;
+  --rose-dark:#A85D72;
+  --ink:#2A241C;
+  --ink-muted:#5C564C;
+  --gold:#C4B08A;
+  --shadow:rgba(45,38,32,0.12);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+
+html.intro-lock, html.intro-lock body{overflow:hidden;height:100dvh;}
+body{
+  font-family:'Montserrat',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+html.inv-ready body{overflow:auto;height:auto;min-height:100dvh;}
+
+#cf{position:fixed;inset:0;pointer-events:none;z-index:500;overflow:hidden;}
+
+/* ═══ Video giriş — dokununca oynat, bitince davetiye ═══ */
+.vintro{
+  position:fixed;inset:0;z-index:200;
+  background:#E8E2D8 center/cover no-repeat;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.vintro video{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;
+  pointer-events:none;
+}
+.vintro-off{display:none!important;}
+.vintro-hint{
+  position:absolute;left:50%;bottom:max(14%,var(--safe-b));transform:translateX(-50%);
+  z-index:2;text-align:center;max-width:90%;
+  font-size:8px;font-weight:300;letter-spacing:4px;text-transform:uppercase;
+  color:rgba(90,82,72,0.55);
+  animation:hintP 2.4s ease-in-out infinite;
+  pointer-events:none;
+}
+.vintro.is-playing .vintro-hint{opacity:0;animation:none;transition:opacity 0.4s;}
+@keyframes hintP{0%,100%{opacity:0.35}50%{opacity:0.88}}
+
+/* ═══ Ana sayfa — Dream şablon düzeni ═══ */
+#page{
+  opacity:0;pointer-events:none;transition:opacity 0.4s ease;
+  background:var(--cream);
+}
+#page.on{opacity:1;pointer-events:auto;}
+
+/* Müzik — sağ üst (davetiye açılınca) */
+.audio-toggle{
+  display:none;align-items:center;justify-content:center;
+  position:fixed;
+  right:max(12px,env(safe-area-inset-right));
+  top:max(12px,env(safe-area-inset-top));
+  z-index:450;
+  width:42px;height:42px;padding:0;
+  border:1px solid rgba(45,38,32,0.12);
+  border-radius:50%;
+  background:rgba(255,252,248,0.92);
+  box-shadow:0 4px 20px rgba(45,38,32,0.1);
+  cursor:pointer;
+  color:var(--olive);
+  -webkit-tap-highlight-color:transparent;
+}
+html.inv-ready .audio-toggle{display:flex;}
+.audio-toggle:active{transform:scale(0.96);}
+.audio-toggle svg{width:20px;height:20px;display:block;}
+.audio-toggle.muted{opacity:0.75;}
+
+/* Hero — Dream görseli: koyu yeşil çerçeve korunur, sadece metin merkezinde hafif ışık */
+.hero{
+  position:relative;min-height:100svh;
+  background:var(--cream-hero) center/cover no-repeat;
+  background-color:#1a2820;
+  display:flex;flex-direction:column;
+}
+.hero-vid{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;
+  opacity:1;
+  filter:saturate(1.18) contrast(1.07) brightness(0.97);
+}
+/* Önceki soluk görünüm: tüm ekranı krem yıkamıştı. Şimdi sadece ortada okunurluk “spot”, kenarlar koyu yeşil kalır */
+.hero::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 95% 78% at 50% 36%,
+      rgba(255,252,247,0.88) 0%,
+      rgba(255,250,242,0.45) 42%,
+      rgba(255,250,242,0.12) 58%,
+      transparent 76%),
+    linear-gradient(180deg,rgba(20,32,24,0) 0%,rgba(18,28,22,0.25) 100%);
+}
+.hero-layer{
+  position:relative;z-index:1;flex:1;min-height:inherit;
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:calc(24svh + var(--safe-t)) 24px calc(28px + var(--safe-b));
+  max-width:420px;margin:0 auto;width:100%;
+}
+.hero-copy{text-align:center;max-width:360px;margin:0 auto;width:100%;}
+.hero-actions{text-align:center;margin-top:auto;padding-top:24px;}
+.hero-kicker{
+  font-size:9px;font-weight:300;letter-spacing:2px;line-height:1.65;
+  color:rgba(55,52,48,0.72);margin-bottom:16px;display:block;
+}
+.hero-names{
+  font-family:'Great Vibes',cursive;font-size:clamp(46px,15vw,68px);
+  line-height:0.98;color:#1e1a16;margin-bottom:4px;
+  text-shadow:0 0 24px rgba(255,252,248,0.9),0 1px 0 rgba(255,255,255,0.5);
+}
+.hero-names .amp{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.42em;
+  color:#9a7b4a;display:block;margin:2px 0 4px;
+}
+.hero-family{
+  font-size:10px;font-weight:300;color:rgba(55,52,48,0.68);
+  letter-spacing:0.8px;margin:14px 0 6px;line-height:1.55;
+}
+.hero-date{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;
+  font-size:clamp(21px,5.8vw,28px);color:#2c261f;margin-top:6px;
+  text-shadow:0 0 18px rgba(255,252,248,0.85);
+}
+.hero-dress{
+  font-size:8.5px;font-weight:400;letter-spacing:3.2px;text-transform:uppercase;
+  color:rgba(45,58,48,0.75);margin-top:12px;
+}
+.hero-cta{
+  margin-top:0;padding:14px 36px;font-family:inherit;
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  border:none;background:#2f3d30;color:var(--paper);cursor:pointer;
+  border-radius:2px;box-shadow:0 6px 24px rgba(20,28,22,0.35);
+}
+.hero-cta:active{opacity:0.92;}
+.hero-chev{
+  display:block;margin-top:16px;font-size:18px;color:#7d6b4a;opacity:0.55;
+  animation:chv 2s ease-in-out infinite;
+}
+@keyframes chv{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+.hero-divider{
+  height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  margin:0 20px;opacity:0.5;
+}
+
+/* Floral fade strip */
+.floral-fade{
+  height:32px;background:linear-gradient(180deg,var(--cream),transparent);
+  opacity:0.6;
+}
+
+/* Countdown — kartlı grid (Dream kahve/koyu geçiş) */
+.cd-section{
+  background:linear-gradient(180deg,#3a3228 0%,#1e1a16 100%);
+  color:#F9F7F3;padding:40px 20px 48px;text-align:center;
+}
+.cd-title{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(24px,6.5vw,30px);
+  display:block;margin-bottom:10px;
+}
+.cd-sub{
+  font-size:9px;font-weight:300;letter-spacing:2.5px;text-transform:uppercase;
+  opacity:0.8;margin-bottom:28px;display:block;
+}
+.cd-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:380px;margin:0 auto;
+}
+.cd-card{
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
+  padding:16px 6px;border-radius:2px;
+}
+.cd-val{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(26px,8vw,34px);font-weight:400;line-height:1;
+}
+.cd-lab{
+  font-size:7px;font-weight:300;letter-spacing:1.5px;text-transform:uppercase;
+  opacity:0.65;margin-top:10px;display:block;
+}
+
+.cd-divider-img{
+  display:block;width:100%;height:auto;vertical-align:middle;
+  background:#1e1a16;
+}
+
+/* Hikayemiz + marquee */
+.story-block{padding:44px 24px 20px;text-align:center;background:var(--cream);}
+.story-block h2{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:26px;color:var(--olive);margin-bottom:14px;
+}
+.story-block p{font-size:12px;font-weight:300;line-height:2;color:var(--ink-muted);max-width:320px;margin:0 auto;}
+
+.marquee-wrap{overflow:hidden;padding:28px 0 40px;background:var(--cream);touch-action:pan-y;}
+.marquee{
+  display:flex;gap:12px;width:max-content;
+  animation:marq 36s linear infinite;
+}
+@keyframes marq{to{transform:translateX(-50%)}}
+.marquee:hover{animation-play-state:paused;}
+.marq-item{
+  flex:0 0 140px;height:180px;border-radius:3px;overflow:hidden;
+  background:linear-gradient(145deg,#E5DDD0,#D4C9BA);
+  box-shadow:0 8px 24px var(--shadow);
+}
+.marq-item img{width:100%;height:100%;object-fit:cover;display:block;opacity:0.92;}
+
+.floral-line{height:24px;margin:0 auto;max-width:200px;opacity:0.35;
+  background:linear-gradient(90deg,transparent,var(--sage),transparent);}
+
+/* Lokasyon */
+.loc-section{padding:40px 20px 48px;background:var(--cream);text-align:center;}
+.loc-head .loc-icon{font-size:22px;display:block;margin-bottom:12px;opacity:0.5;}
+.loc-head h2{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:26px;color:var(--olive);margin-bottom:8px;}
+.loc-head p{font-size:13px;color:var(--ink-muted);margin-bottom:6px;}
+.loc-time{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--sage);}
+.loc-media{
+  margin:24px auto 0;max-width:400px;border-radius:3px;overflow:hidden;
+  aspect-ratio:4/3;background:linear-gradient(160deg,#DDD5C8,#C4B8A8);
+  box-shadow:0 12px 40px var(--shadow);
+}
+.loc-media img{width:100%;height:100%;object-fit:cover;display:block;}
+.map-frame{
+  margin:20px auto 0;max-width:400px;height:200px;border-radius:3px;overflow:hidden;
+  box-shadow:0 8px 28px var(--shadow);
+}
+.map-frame iframe{width:100%;height:100%;border:0;}
+.loc-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px;}
+.loc-btn{
+  font-family:inherit;font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  padding:12px 22px;border-radius:2px;border:1px solid var(--olive);
+  background:var(--olive);color:var(--paper);cursor:pointer;text-decoration:none;
+}
+.loc-btn.ghost{background:transparent;color:var(--olive);}
+
+/* Akış */
+.flow-section{padding:44px 20px;background:var(--paper);border-top:1px solid rgba(196,176,138,0.2);}
+.flow-section h2{
+  font-family:'Cormorant Garamond',serif;font-style:italic;text-align:center;font-size:24px;color:var(--olive);margin-bottom:28px;
+}
+.flow-grid{display:flex;flex-direction:column;gap:22px;max-width:360px;margin:0 auto;}
+.flow-item{display:grid;grid-template-columns:56px 1fr;gap:14px;text-align:left;align-items:start;}
+.flow-time{
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--sage);
+  padding:8px 0;border:1px solid var(--gold);text-align:center;border-radius:2px;
+}
+.flow-item h4{font-size:13px;font-weight:500;margin-bottom:4px;color:var(--ink);}
+.flow-item p{font-size:11px;font-weight:300;color:var(--ink-muted);line-height:1.6;}
+
+.menu-divider-img{display:block;width:100%;max-height:48px;object-fit:cover;opacity:0.9;}
+
+.menu-block{padding:36px 24px;text-align:center;background:var(--cream);}
+.menu-block h3{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;margin-bottom:18px;color:var(--olive);}
+.menu-block p{font-size:11px;font-weight:300;color:var(--ink-muted);line-height:2.2;}
+
+.trans-block{padding:36px 24px;text-align:center;background:var(--paper);}
+.trans-block h3{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--olive);margin-bottom:12px;}
+.trans-block p{font-size:11px;font-weight:300;color:var(--ink-muted);line-height:1.9;max-width:320px;margin:0 auto;}
+
+/* FAQ */
+.faq-block{padding:40px 22px 28px;background:var(--cream);}
+.faq-block h3{text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:22px;margin-bottom:22px;color:var(--olive);}
+.faq-item{border-bottom:1px solid rgba(125,139,114,0.2);padding:16px 0;}
+.faq-item h4{font-size:12px;font-weight:500;margin-bottom:6px;color:var(--ink);}
+.faq-item p{font-size:11px;font-weight:300;color:var(--ink-muted);line-height:1.7;}
+
+/* RSVP */
+.rsvp-block{padding:36px 20px 48px;background:var(--paper);border-top:1px solid rgba(196,176,138,0.25);}
+.rsvp-block h3{text-align:center;font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;margin-bottom:22px;color:var(--olive);}
+.rsvp-form{max-width:340px;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+.rsvp-form label{font-size:10px;font-weight:400;color:var(--ink-muted);display:flex;flex-direction:column;gap:6px;text-align:left;}
+.rsvp-form input,.rsvp-form textarea,.rsvp-form select{
+  font-family:inherit;font-size:13px;padding:12px 14px;border:1px solid rgba(125,139,114,0.35);
+  border-radius:2px;background:#fff;
+}
+.rsvp-form button[type="submit"]{
+  margin-top:8px;padding:14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  border:none;background:var(--olive);color:var(--paper);cursor:pointer;border-radius:2px;
+}
+.rsvp-done{display:none;text-align:center;padding:24px;font-size:13px;color:var(--olive-soft);}
+.rsvp-done.on{display:block;}
+
+.kids-note{text-align:center;font-size:11px;font-style:italic;color:var(--ink-muted);padding:0 24px 32px;background:var(--paper);}
+
+/* Footer */
+.ft{
+  text-align:center;padding:40px 24px calc(48px + var(--safe-b));
+  background:var(--cream);border-top:1px solid rgba(196,176,138,0.25);
+}
+.ft-heart{color:var(--rose-seal-deep);font-size:14px;margin-bottom:12px;display:block;}
+.ft h3{font-family:'Great Vibes',cursive;font-size:32px;font-weight:400;color:var(--ink);margin-bottom:8px;}
+.ft p{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-muted);line-height:2;}
+
+.rev{opacity:0;transform:translateY(12px);transition:opacity 0.5s ease,transform 0.5s ease;}
+.rev.show{opacity:1;transform:none;}
+
+@media (prefers-reduced-motion:reduce){
+  .marquee{animation:none;}
+  .hero-chev{animation:none;}
+  .rev{transition:none;opacity:1;transform:none;}
+  .vintro-hint{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="cf" aria-hidden="true"></div>
+
+<!-- Şarkınızı proje klasöründe media/sarki.mp3 olarak kaydedin (veya aşağıdaki src'yi değiştirin) -->
+<audio id="bgMusic" loop playsinline preload="metadata">
+  <source src="media/sarki.mp3" type="audio/mpeg">
+</audio>
+<button type="button" class="audio-toggle" id="audioToggle" aria-label="Müziği kapat" title="Müzik">
+  <svg id="audioIconOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+    <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8 8 0 010 12"/>
+  </svg>
+  <svg id="audioIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="display:none" aria-hidden="true">
+    <path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/>
+  </svg>
+</button>
+
+<div class="vintro" id="vintro" role="button" tabindex="0" aria-label="Davetiyeyi açmak için dokunun"
+  style="background-image:url(https://bizevleniyoruz.blob.core.windows.net/assets/assets/botanical-intro-poster.webp)">
+  <video id="vintroVid" playsinline preload="auto" poster="https://bizevleniyoruz.blob.core.windows.net/assets/assets/botanical-intro-poster.webp"
+    src="https://bizevleniyoruz.blob.core.windows.net/assets/assets/waxsealintrobeige.mp4"
+    controlslist="nofullscreen nodownload noremoteplayback" disablepictureinpicture></video>
+  <p class="vintro-hint" id="vintroHint">Dokunun — kısa sürede açılır</p>
+</div>
+
+<!-- Davetiye sayfası -->
+<main id="page" aria-hidden="true">
+
+  <section class="hero" id="hero"
+    style="background-image:url(https://bizevleniyoruz.blob.core.windows.net/assets/assets/dream-hero.webp)">
+    <video class="hero-vid" playsinline muted loop preload="metadata" aria-hidden="true"
+      src="https://bizevleniyoruz.blob.core.windows.net/assets/assets/dream-hero-mobile.mp4"></video>
+    <div class="hero-layer">
+      <div class="hero-copy">
+        <span class="hero-kicker rev" data-rev>Nişanımızı birlikte kutlamak için davetlisiniz.</span>
+        <div class="hero-names rev" data-rev>
+          <span>Hatice</span>
+          <span class="amp">&amp;</span>
+          <span>Ömer</span>
+        </div>
+        <p class="hero-family rev" data-rev style="transition-delay:.1s">Sevgiyle bekliyoruz</p>
+        <p class="hero-date rev" data-rev style="transition-delay:.2s">1 Mayıs 2026</p>
+        <p class="hero-dress rev" data-rev style="transition-delay:.25s">Cuma · 19.00</p>
+      </div>
+      <div class="hero-actions">
+        <button type="button" class="hero-cta rev" data-rev style="transition-delay:.3s" id="toRsvp">Katılımını bildir</button>
+        <span class="hero-chev rev" data-rev style="transition-delay:.35s" aria-hidden="true">⌄</span>
+      </div>
+    </div>
+  </section>
+  <div class="hero-divider"></div>
+  <div class="floral-fade" aria-hidden="true"></div>
+
+  <section class="cd-section" id="countdown">
+    <span class="cd-title rev" data-rev>Geri sayım</span>
+    <span class="cd-sub rev" data-rev>1 Mayıs 2026 nişan tarihi</span>
+    <div class="cd-grid rev" data-rev>
+      <div class="cd-card"><span class="cd-val" id="cD">–</span><span class="cd-lab">gün</span></div>
+      <div class="cd-card"><span class="cd-val" id="cH">–</span><span class="cd-lab">saat</span></div>
+      <div class="cd-card"><span class="cd-val" id="cM">–</span><span class="cd-lab">dakika</span></div>
+      <div class="cd-card"><span class="cd-val" id="cS">–</span><span class="cd-lab">saniye</span></div>
+    </div>
+  </section>
+
+  <img class="cd-divider-img" src="https://bizevleniyoruz.blob.core.windows.net/assets/assets/dream-countdown-divider.webp" alt="" width="1200" height="80" loading="lazy">
+
+  <div class="story-block" id="photos">
+    <h2>Hikayemiz</h2>
+    <p>Bu özel günümüzde yanımızda olmanız bizi çok mutlu eder.</p>
+  </div>
+
+  <div class="marquee-wrap" aria-label="Fotoğraf şeridi">
+    <div class="marquee" id="marquee">
+      <!-- Nötr stok görseller — kendi fotoğraflarınızla değiştirin -->
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1523438880610-6ad2edad5ebb?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&q=80" alt=""></div>
+      <div class="marq-item"><img src="https://images.unsplash.com/photo-1523438880610-6ad2edad5ebb?w=400&q=80" alt=""></div>
+    </div>
+  </div>
+
+  <div class="floral-line" aria-hidden="true"></div>
+
+  <section class="loc-section" id="location">
+    <div class="loc-head">
+      <span class="loc-icon" aria-hidden="true">◇</span>
+      <h2>Lokasyon</h2>
+      <p>Esenler Belediyesi Balo Merkezi</p>
+      <span class="loc-time">19:00 — Gece</span>
+    </div>
+    <div class="loc-media">
+      <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80" alt="Salon atmosferi" loading="lazy">
+    </div>
+    <div class="map-frame">
+      <iframe loading="lazy" title="Esenler Balo Merkezi harita"
+        src="https://www.google.com/maps?q=Esenler+Belediyesi+Balo+Merkezi+Istanbul&output=embed"></iframe>
+    </div>
+    <div class="loc-actions">
+      <button type="button" class="loc-btn" id="calBtn">Takvime ekle</button>
+      <a class="loc-btn ghost" href="https://www.google.com/maps/search/?api=1&query=Esenler+Belediyesi+Balo+Merkezi" target="_blank" rel="noopener">Yol tarifi al</a>
+    </div>
+  </section>
+
+  <section class="flow-section">
+    <h2>Nişan akışı</h2>
+    <div class="flow-grid">
+      <div class="flow-item">
+        <span class="flow-time">18:30</span>
+        <div>
+          <h4>Karşılama</h4>
+          <p>Misafirlerin karşılanması ve kokteyl ikramı.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-time">19:00</span>
+        <div>
+          <h4>Nişan töreni</h4>
+          <p>Merasim başlangıcı.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-time">19:45</span>
+        <div>
+          <h4>Akşam yemeği</h4>
+          <p>Yemek servisi ve ikramlar.</p>
+        </div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-time">21:00</span>
+        <div>
+          <h4>Eğlence</h4>
+          <p>Müzik ve kutlama.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <img class="menu-divider-img" src="https://bizevleniyoruz.blob.core.windows.net/assets/assets/dream-menu-divider.webp" alt="" loading="lazy">
+
+  <div class="menu-block">
+    <h3>İkram</h3>
+    <p>Ordövr ve sıcak-soğuk seçkiler<br>Ara sıcak · Salata · Ana yemek · Tatlı<br>Çay &amp; kahve servisi · Sınırsız meşrubat</p>
+  </div>
+
+  <div class="trans-block">
+    <h3>Ulaşım &amp; otopark</h3>
+    <p>Mekânda misafirlerimize otopark imkânı sunulmaktadır. Toplu taşıma ve taksi ile ulaşım mümkündür.</p>
+  </div>
+
+  <div class="faq-block">
+    <h3>Sıkça sorulan sorular</h3>
+    <div class="faq-item">
+      <h4>Otopark var mı?</h4>
+      <p>Evet, etkinlik alanında otopark bulunmaktadır.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Dress code var mı?</h4>
+      <p>Şık giyinmeniz yeterli; pastel ve doğal tonlar önerilir.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Çocuklar davetli mi?</h4>
+      <p>Detaylar için çiftimizle iletişime geçebilirsiniz.</p>
+    </div>
+  </div>
+
+  <section class="rsvp-block" id="rsvp">
+    <h3>Katılım</h3>
+    <p class="rsvp-done" id="rsvpDone">Teşekkürler — mesajınız alındı.</p>
+    <form class="rsvp-form" id="rsvpForm">
+      <label>Ad Soyad *
+        <input name="name" type="text" required placeholder="Adınız Soyadınız" autocomplete="name">
+      </label>
+      <label>E-posta
+        <input name="email" type="email" placeholder="ornek@email.com" autocomplete="email">
+      </label>
+      <label>Katılım *
+        <select name="attend" required>
+          <option value="yes">Evet, katılacağım</option>
+          <option value="no">Katılamayacağım</option>
+        </select>
+      </label>
+      <label>Kişi sayısı (siz dahil)
+        <input name="guests" type="number" min="1" max="10" value="1">
+      </label>
+      <label>Mesaj
+        <textarea name="note" rows="3" placeholder="Özel notunuz"></textarea>
+      </label>
+      <button type="submit">Gönder</button>
+    </form>
+  </section>
+
+  <p class="kids-note" id="kids">Sevgili miniklerimize iyi geceler dileriz.</p>
+
+  <footer class="ft">
+    <span class="ft-heart" aria-hidden="true">♡</span>
+    <h3>Hatice &amp; Ömer</h3>
+    <p>1 Mayıs 2026 · Esenler Belediyesi Balo Merkezi</p>
+  </footer>
+</main>
+
+<script>
+const CF_COLORS=['#C9B99A','#D4C5A9','#E8C4CC','#E0D8CC','#7D8B72','#C4A574','#F5E6E9'];
+function burst(n){
+  const c=document.getElementById('cf');
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');
+    const s=3+Math.random()*7,h=s*(Math.random()>0.4?2.4:1);
+    el.style.cssText='position:absolute;top:-12px;left:'+(Math.random()*100)+'%;width:'+s+'px;height:'+h+'px;background:'+CF_COLORS[Math.floor(Math.random()*CF_COLORS.length)]+';border-radius:'+(Math.random()>0.45?'50%':'1px')+';opacity:'+(0.45+Math.random()*0.45)+';animation:cpF '+(2.8+Math.random()*2.8)+'s linear forwards;animation-delay:'+(Math.random()*0.8)+'s;';
+    c.appendChild(el);
+  }
+}
+const st=document.createElement('style');
+st.textContent='@keyframes cpF{0%{transform:translateY(0) rotate(0);opacity:1}85%{opacity:0.55}100%{transform:translateY(110vh) rotate(320deg);opacity:0}}';
+document.head.appendChild(st);
+
+const vintro=document.getElementById('vintro');
+const vintroVid=document.getElementById('vintroVid');
+const params=new URLSearchParams(location.search);
+/* Balmumu videosu uzun; birkaç sn sonra davetiye. ?introSec=3 ile saniyeyi değiştir */
+var introMaxSec=parseFloat(params.get('introSec'),10);
+if(isNaN(introMaxSec)||introMaxSec<0.8)introMaxSec=2;
+
+var bgMusic=document.getElementById('bgMusic');
+var audioToggle=document.getElementById('audioToggle');
+var iconOn=document.getElementById('audioIconOn');
+var iconOff=document.getElementById('audioIconOff');
+var vintroHintEl=document.getElementById('vintroHint');
+
+function syncAudioBtn(){
+  if(!bgMusic||!iconOn)return;
+  var m=bgMusic.muted;
+  iconOn.style.display=m?'none':'block';
+  iconOff.style.display=m?'block':'none';
+  audioToggle.classList.toggle('muted',m);
+  audioToggle.setAttribute('aria-label',m?'Müziği aç':'Müziği kapat');
+}
+if(sessionStorage.getItem('musicMuted')==='1'&&bgMusic){bgMusic.muted=true;}
+syncAudioBtn();
+if(bgMusic){
+  bgMusic.addEventListener('error',function(){
+    if(audioToggle) audioToggle.style.display='none';
+  });
+}
+
+function tryStartMusic(){
+  if(!bgMusic||bgMusic.muted)return;
+  bgMusic.volume=0.38;
+  var p=bgMusic.play();
+  if(p&&p.catch)p.catch(function(){});
+}
+
+audioToggle.addEventListener('click',function(e){
+  e.stopPropagation();
+  if(!bgMusic)return;
+  if(bgMusic.paused){
+    bgMusic.muted=false;
+    sessionStorage.removeItem('musicMuted');
+    bgMusic.play().catch(function(){});
+    syncAudioBtn();
+    return;
+  }
+  bgMusic.muted=!bgMusic.muted;
+  sessionStorage.setItem('musicMuted',bgMusic.muted?'1':'0');
+  syncAudioBtn();
+});
+
+let mainShown=false;
+function goToMain(){
+  if(mainShown)return;
+  mainShown=true;
+  burst(55);
+  vintro.classList.add('vintro-off');
+  vintroVid.pause();
+  document.documentElement.classList.add('inv-ready');
+  document.documentElement.classList.remove('intro-lock');
+  var page=document.getElementById('page');
+  page.classList.add('on');
+  page.removeAttribute('aria-hidden');
+  document.querySelectorAll('#page [data-rev]').forEach(function(el,i){
+    setTimeout(function(){el.classList.add('show');},30+i*40);
+  });
+  try{document.querySelector('.hero-vid').play();}catch(e){}
+  tryStartMusic();
+  setTimeout(function(){burst(18);},160);
+}
+
+function tryPlayIntro(){
+  if(mainShown)return;
+  vintro.classList.add('is-playing');
+  if(vintroHintEl)vintroHintEl.textContent='Tekrar dokunun — hemen atla';
+  var p=vintroVid.play();
+  if(p&&p.then){
+    p.then(function(){tryStartMusic();}).catch(function(){
+      vintro.classList.remove('is-playing');
+      if(vintroHintEl)vintroHintEl.textContent='Dokunun — kısa sürede açılır';
+    });
+  }else{
+    tryStartMusic();
+  }
+}
+
+vintro.addEventListener('click',function(){
+  if(mainShown)return;
+  if(vintroVid.paused) tryPlayIntro();
+  else goToMain();
+});
+vintro.addEventListener('keydown',function(e){
+  if(mainShown)return;
+  if(e.key==='Enter'||e.key===' '){
+    e.preventDefault();
+    if(vintroVid.paused) tryPlayIntro();
+    else goToMain();
+  }
+});
+
+vintroVid.addEventListener('ended',goToMain);
+vintroVid.addEventListener('timeupdate',function(){
+  if(mainShown||vintroVid.paused)return;
+  if(vintroVid.currentTime>=introMaxSec)goToMain();
+});
+
+if(params.has('noIntro')){
+  goToMain();
+}
+
+document.getElementById('toRsvp').addEventListener('click',function(){
+  document.getElementById('rsvp').scrollIntoView({behavior:'smooth'});
+});
+
+document.getElementById('rsvpForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  document.getElementById('rsvpForm').style.display='none';
+  document.getElementById('rsvpDone').classList.add('on');
+});
+
+(function(){
+  var mq=document.getElementById('marquee');
+  if(mq) mq.innerHTML+=mq.innerHTML;
+})();
+
+document.getElementById('calBtn').addEventListener('click',function(){
+  var title=encodeURIComponent('Hatice & Ömer — Nişan');
+  var details=encodeURIComponent('Esenler Belediyesi Balo Merkezi');
+  var loc=encodeURIComponent('Esenler Belediyesi Balo Merkezi, İstanbul');
+  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+title+'&dates=20260501T160000Z/20260501T210000Z&details='+details+'&location='+loc,'_blank');
+});
+
+function tick(){
+  var t=new Date('2026-05-01T19:00:00')-new Date();
+  var ids=['cD','cH','cM','cS'];
+  if(t<=0){ids.forEach(function(id){var e=document.getElementById(id);if(e)e.textContent='0';});return;}
+  var v=[Math.floor(t/864e5),Math.floor(t%864e5/36e5),Math.floor(t%36e5/6e4),Math.floor(t%6e4/1e3)];
+  ids.forEach(function(id,i){var e=document.getElementById(id);if(e)e.textContent=String(v[i]);});
+}
+setInterval(tick,1000);
+tick();
+</script>
+</body>
+</html>
