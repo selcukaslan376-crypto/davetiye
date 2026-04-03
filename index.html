@@ -164,12 +164,14 @@ html.inv-ready .audio-toggle{display:flex;}
   text-shadow:0 0 14px rgba(255,252,248,0.8);
 }
 .hero-scroll-hint{
-  margin-top:0;padding:12px 18px;font-family:inherit;
-  font-size:7.5px;font-weight:300;letter-spacing:3px;text-transform:uppercase;
-  color:rgba(45,58,48,0.58);background:transparent;border:none;cursor:pointer;
+  margin-top:4px;padding:14px 22px;font-family:inherit;
+  font-size:9.5px;font-weight:500;letter-spacing:3.2px;text-transform:uppercase;
+  color:#2a3328;background:rgba(255,252,248,0.72);border:1px solid rgba(45,58,48,0.22);
+  border-radius:3px;cursor:pointer;box-shadow:0 4px 20px rgba(30,40,32,0.12);
   -webkit-tap-highlight-color:transparent;
+  transition:transform 0.15s ease,opacity 0.15s ease;
 }
-.hero-scroll-hint:active{opacity:0.65;}
+.hero-scroll-hint:active{opacity:0.88;transform:scale(0.98);}
 .hero-chev{
   display:block;margin-top:16px;font-size:18px;color:#7d6b4a;opacity:0.55;
   animation:chv 2s ease-in-out infinite;
@@ -367,7 +369,7 @@ html.inv-ready .audio-toggle{display:flex;}
         <p class="hero-family rev" data-rev style="transition-delay:.1s">Sevgiyle bekliyoruz</p>
         <p class="hero-date rev" data-rev style="transition-delay:.2s">1 Mayıs 2026</p>
         <p class="hero-dress rev" data-rev style="transition-delay:.25s">Cuma · 19.00</p>
-        <p class="hero-venue rev" data-rev style="transition-delay:.28s">Esenler Balo Merkezi</p>
+        <p class="hero-venue rev" data-rev style="transition-delay:.28s">Esenler Balo Salonu</p>
       </div>
       <div class="hero-actions">
         <button type="button" class="hero-scroll-hint rev" data-rev style="transition-delay:.32s" id="heroScrollHint" aria-label="Aşağı kaydır, geri sayıma git">Devam etmek için kaydırın</button>
@@ -416,19 +418,19 @@ html.inv-ready .audio-toggle{display:flex;}
     <div class="loc-head">
       <span class="loc-icon" aria-hidden="true">◇</span>
       <h2>Lokasyon</h2>
-      <p>Esenler Belediyesi Balo Merkezi</p>
+      <p>Esenler Belediyesi Balo Salonu</p>
       <span class="loc-time">19:00 — Gece</span>
     </div>
     <div class="loc-media">
       <img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=80" alt="Salon atmosferi" loading="lazy">
     </div>
     <div class="map-frame">
-      <iframe loading="lazy" title="Esenler Balo Merkezi harita"
-        src="https://www.google.com/maps?q=Esenler+Belediyesi+Balo+Merkezi+Istanbul&output=embed"></iframe>
+      <iframe loading="lazy" title="Esenler Balo Salonu harita"
+        src="https://www.google.com/maps?q=Esenler+Belediyesi+Balo+Salonu+Istanbul&output=embed"></iframe>
     </div>
     <div class="loc-actions">
       <button type="button" class="loc-btn" id="calBtn">Takvime ekle</button>
-      <a class="loc-btn ghost" href="https://www.google.com/maps/search/?api=1&query=Esenler+Belediyesi+Balo+Merkezi" target="_blank" rel="noopener">Yol tarifi al</a>
+      <a class="loc-btn ghost" href="https://www.google.com/maps/search/?api=1&query=Esenler+Belediyesi+Balo+Salonu" target="_blank" rel="noopener">Yol tarifi al</a>
     </div>
   </section>
 
@@ -499,7 +501,7 @@ html.inv-ready .audio-toggle{display:flex;}
   <footer class="ft">
     <span class="ft-heart" aria-hidden="true">♡</span>
     <h3>Hatice &amp; Ömer</h3>
-    <p>1 Mayıs 2026 · Esenler Belediyesi Balo Merkezi</p>
+    <p>1 Mayıs 2026 · Esenler Belediyesi Balo Salonu</p>
   </footer>
 </main>
 
@@ -639,8 +641,8 @@ document.getElementById('heroScrollHint').addEventListener('click',function(){
 
 document.getElementById('calBtn').addEventListener('click',function(){
   var title=encodeURIComponent('Hatice & Ömer — Nişan');
-  var details=encodeURIComponent('Esenler Belediyesi Balo Merkezi');
-  var loc=encodeURIComponent('Esenler Belediyesi Balo Merkezi, İstanbul');
+  var details=encodeURIComponent('Esenler Belediyesi Balo Salonu');
+  var loc=encodeURIComponent('Esenler Belediyesi Balo Salonu, İstanbul');
   window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text='+title+'&dates=20260501T160000Z/20260501T210000Z&details='+details+'&location='+loc,'_blank');
 });
 
