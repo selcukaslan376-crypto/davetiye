@@ -1,0 +1,18 @@
+{
+  "name": "Ömer Selçuk Aslan",
+  "short_name": "ÖSA",
+  "description": "Embedded software engineering and technical writing about C.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f8f6",
+  "theme_color": "#1c1e21",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">Ömer Selçuk Aslan</title>
+  <rect width="64" height="64" rx="12" fill="#1c1e21"/>
+  <circle cx="25" cy="18" r="3" fill="#f8f8f6"/>
+  <circle cx="39" cy="18" r="3" fill="#f8f8f6"/>
+  <path d="M32 24c-10.5 0-18 7.1-18 16s7.5 16 18 16 18-7.1 18-16-7.5-16-18-16Zm0 7c6.1 0 10.5 3.8 10.5 9S38.1 49 32 49s-10.5-3.8-10.5-9S25.9 31 32 31Z" fill="#f8f8f6"/>
+</svg>
