@@ -1,0 +1,119 @@
+.hero {
+  display: grid;
+  min-height: min(48rem, calc(100vh - 4.5rem));
+  align-content: center;
+  padding-block: var(--space-7);
+}
+
+.hero h1 {
+  max-width: 15ch;
+  margin-block-end: var(--space-3);
+}
+
+.hero-title {
+  margin-block-end: var(--space-4);
+  color: var(--color-muted);
+  font-size: var(--step-2);
+  font-weight: 520;
+  letter-spacing: -0.02em;
+}
+
+.hero-copy {
+  max-width: 42rem;
+  color: var(--color-muted);
+  font-size: var(--step-1);
+}
+
+.topic-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  margin-block-start: var(--space-6);
+  color: var(--color-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.015em;
+}
+
+.topic-line span:not(:last-child)::after {
+  content: "/";
+  margin-inline-start: 1.2rem;
+  color: var(--color-border-strong);
+}
+
+.statements {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.statement {
+  border-block-start: 1px solid var(--color-border);
+  padding-block-start: var(--space-4);
+}
+
+.statement strong {
+  display: block;
+  margin-block-end: var(--space-2);
+  font-size: var(--step-1);
+}
+
+.statement p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.project-list {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.project-card {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.38fr) minmax(0, 1fr);
+  gap: var(--space-5);
+}
+
+.project-card h2 {
+  font-size: var(--step-2);
+}
+
+.project-kicker {
+  color: var(--color-accent);
+  font-size: var(--step--1);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.not-found {
+  display: grid;
+  min-height: 68vh;
+  place-content: center;
+  text-align: center;
+}
+
+.not-found-code {
+  margin: 0;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: var(--step-1);
+}
+
+@media (max-width: 47rem) {
+  .hero {
+    min-height: auto;
+  }
+
+  .project-card {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .topic-line span:not(:last-child)::after {
+    margin-inline-start: 0.7rem;
+  }
+
+  .topic-line {
+    gap: 0.35rem 0.7rem;
+  }
+}

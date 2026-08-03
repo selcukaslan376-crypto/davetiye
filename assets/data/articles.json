@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Understanding const in C: Qualified Types, Objects, and Modifiable Lvalues",
+    "description": "A careful introduction to const-qualified types, pointer qualification, modifiable lvalues, and the limits of casting away const.",
+    "category": "C Language",
+    "tags": ["C99", "C11", "const", "types", "pointers"],
+    "published": "2026-07-15",
+    "updated": "2026-07-15",
+    "readingTime": "10 min read",
+    "url": "articles/understanding-const-in-c.html"
+  },
+  {
+    "title": "Pointer Values, Object Addresses, and Dereferencing in C",
+    "description": "An introductory model for pointer objects and values, address and indirection operators, null pointers, and invalid pointer states.",
+    "category": "C Language",
+    "tags": ["C99", "C11", "pointers", "memory", "undefined behavior"],
+    "published": "2026-07-15",
+    "updated": "2026-07-15",
+    "readingTime": "9 min read",
+    "url": "articles/pointer-values-and-object-addresses.html"
+  },
+  {
+    "title": "What Happens to a Pointer After realloc?",
+    "description": "A precise guide to successful and failed reallocation, pointer validity, the temporary-pointer pattern, and cautious handling of zero-size requests.",
+    "category": "Memory Management",
+    "tags": ["C99", "C11", "realloc", "pointers", "dynamic memory"],
+    "published": "2026-07-15",
+    "updated": "2026-07-15",
+    "readingTime": "9 min read",
+    "url": "articles/realloc-and-pointer-validity.html"
+  }
+]

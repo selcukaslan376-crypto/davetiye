@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Understanding const in C — Ömer Selçuk Aslan</title>
+  <meta name="description" content="A careful introduction to const-qualified types, objects, modifiable lvalues, pointer qualification, and casting away const in C.">
+  <link rel="canonical" href="https://omerselcuk.com/articles/understanding-const-in-c.html">
+  <meta property="og:type" content="article"><meta property="og:title" content="Understanding const in C: Qualified Types, Objects, and Modifiable Lvalues"><meta property="og:description" content="A precise introduction to const qualification and what may actually be modified in C."><meta property="og:url" content="https://omerselcuk.com/articles/understanding-const-in-c.html"><meta property="og:site_name" content="Ömer Selçuk Aslan"><meta property="article:published_time" content="2026-07-15"><meta property="article:modified_time" content="2026-07-15"><meta property="article:section" content="C Language">
+  <meta name="twitter:card" content="summary"><meta name="twitter:title" content="Understanding const in C"><meta name="twitter:description" content="Qualified types, objects, modifiable lvalues, and pointer qualification.">
+  <meta name="theme-color" content="#f8f8f6" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#151719" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="manifest" href="../site.webmanifest">
+  <script src="../assets/js/theme.js"></script><link rel="stylesheet" href="../assets/css/tokens.css"><link rel="stylesheet" href="../assets/css/base.css"><link rel="stylesheet" href="../assets/css/layout.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="../assets/css/pages.css"><link rel="stylesheet" href="../assets/css/article.css"><link rel="stylesheet" href="../assets/css/print.css" media="print"><script src="../assets/js/main.js" defer></script><script src="../assets/js/article.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BlogPosting","headline":"Understanding const in C: Qualified Types, Objects, and Modifiable Lvalues","description":"A careful introduction to const-qualified types, objects, modifiable lvalues, pointer qualification, and casting away const in C.","datePublished":"2026-07-15","dateModified":"2026-07-15","inLanguage":"en","mainEntityOfPage":"https://omerselcuk.com/articles/understanding-const-in-c.html","author":{"@id":"https://omerselcuk.com/#person"},"publisher":{"@id":"https://omerselcuk.com/#person"},"articleSection":"C Language","keywords":["C99","C11","const","types","pointers"],"isPartOf":{"@id":"https://omerselcuk.com/#website"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://omerselcuk.com/"},{"@type":"ListItem","position":2,"name":"Articles","item":"https://omerselcuk.com/articles.html"},{"@type":"ListItem","position":3,"name":"Understanding const in C","item":"https://omerselcuk.com/articles/understanding-const-in-c.html"}]}}
+  </script>
+</head>
+<body data-root="nested">
+  <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
+  <a class="skip-link" href="#article-body">Skip to article</a>
+  <header class="site-header"><div class="container header-inner"><a class="brand" href="../index.html">Ömer Selçuk Aslan</a><button class="nav-toggle" type="button" data-nav-toggle aria-controls="primary-navigation" aria-expanded="false">Menu</button><nav class="site-nav" id="primary-navigation" data-site-nav data-open="false" aria-label="Primary navigation"><a href="../index.html">Home</a><a href="../about.html">About</a><a href="../experience.html">Experience</a><a href="../projects.html">Projects</a><a href="../articles.html" aria-current="page">Articles</a><a href="../contact.html">Contact</a><a href="../articles.html#article-search">Search</a></nav><button class="theme-toggle" type="button" data-theme-toggle hidden>System</button></div></header>
+  <main>
+    <header class="article-header container">
+      <p class="eyebrow">C Language</p>
+      <h1>Understanding <code>const</code> in C: Qualified Types, Objects, and Modifiable Lvalues</h1>
+      <p class="article-description">A careful introduction to what <code>const</code> qualifies, what an expression allows, and why pointer declarations require reading from the identifier outward.</p>
+      <ul class="meta-list" aria-label="Article details"><li>Published <time datetime="2026-07-15">July 15, 2026</time></li><li>Updated <time datetime="2026-07-15">July 15, 2026</time></li><li>10 min read</li></ul>
+      <ul class="tag-list" aria-label="Tags"><li>C99</li><li>C11</li><li>const</li><li>types</li><li>pointers</li></ul>
+    </header>
+
+    <div class="article-layout container">
+      <nav class="article-toc" aria-labelledby="toc-title"><h2 id="toc-title">On this page</h2><ol><li><a href="#scope">Scope of this introduction</a></li><li><a href="#qualified-types">Qualified types and objects</a></li><li><a href="#modifiable-lvalues">Modifiable lvalues</a></li><li><a href="#pointer-qualification">Pointer qualification</a></li><li><a href="#casting-away-const">Casting away const</a></li><li><a href="#api-design">Using const in interfaces</a></li><li><a href="#summary">Working model</a></li><li><a href="#references">References</a></li></ol></nav>
+
+      <article class="article-body" id="article-body" data-article-body>
+        <p>The word <code>const</code> is often introduced as meaning “this variable cannot change.” That shortcut is useful for a first encounter, but it stops being reliable once pointers, function interfaces, or casts enter the program. In C, <code>const</code> is a <em>type qualifier</em>. The useful question is not simply “is this variable constant?” but “which type is qualified, which object does an expression designate, and is the lvalue used for the modification modifiable?”</p>
+
+        <section aria-labelledby="scope">
+          <h2 id="scope">Scope of this introduction</h2>
+          <p>This article is original introductory sample content for a growing knowledge base. It uses the vocabulary of C99 and C11, but it is not a quotation from the ISO C standard and does not replace the normative text. The examples focus on ordinary object pointers and scalar objects so that the central distinctions remain visible.</p>
+          <aside class="callout callout-note"><strong>Note</strong><p>C and C++ share much of the surface syntax shown here, but their type systems and rules are not identical. The statements in this article are about C.</p></aside>
+        </section>
+
+        <section aria-labelledby="qualified-types">
+          <h2 id="qualified-types">Qualified types and objects</h2>
+          <p>A type such as <code>const int</code> is a const-qualified version of <code>int</code>. When an object is defined with that type, the object is not modifiable by a C program after initialization.</p>
+          <div class="code-block"><div class="code-block-header"><span>const-object.c</span></div><pre><code><span class="tok-keyword">const</span> <span class="tok-type">int</span> sample_limit = <span class="tok-number">64</span>;
+
+<span class="tok-comment">/* Reading the value is ordinary and valid. */</span>
+<span class="tok-type">int</span> local_limit = sample_limit;
+
+<span class="tok-comment">/* Constraint violation: sample_limit is not a modifiable lvalue. */</span>
+sample_limit = <span class="tok-number">128</span>;</code></pre></div>
+          <p>The last assignment requires a diagnostic from a conforming implementation; it is not made acceptable by the fact that the object occupies storage. Storage and permission to modify through a C expression are separate concerns.</p>
+          <p>Qualification can also appear inside aggregate types. A structure or union is not a modifiable lvalue when one of its members has a const-qualified type, including through nested aggregate membership. This prevents whole-object assignment from becoming a back door to overwrite a const-qualified subobject.</p>
+        </section>
+
+        <section aria-labelledby="modifiable-lvalues">
+          <h2 id="modifiable-lvalues">The role of a modifiable lvalue</h2>
+          <p>An lvalue is an expression that designates an object. Not every lvalue is modifiable. In the common scalar case, a modifiable lvalue must designate an object through a type that is not const-qualified, and it must satisfy the language’s other restrictions on modifiable lvalues.</p>
+          <p>This vocabulary explains why the left side of an assignment matters. Consider a non-const object viewed through two differently qualified pointer types:</p>
+          <div class="code-block"><div class="code-block-header"><span>two-views.c</span></div><pre><code><span class="tok-type">int</span> reading = <span class="tok-number">12</span>;
+<span class="tok-type">int</span> *writable = &amp;reading;
+<span class="tok-keyword">const</span> <span class="tok-type">int</span> *observed = &amp;reading;
+
+*writable = <span class="tok-number">13</span>;  <span class="tok-comment">/* Valid: reading is an int object. */</span>
+<span class="tok-type">int</span> copy = *observed; <span class="tok-comment">/* Valid: reading through observed. */</span>
+<span class="tok-comment">/* *observed = 14;  Not allowed through this lvalue. */</span></code></pre></div>
+          <p>The pointer <code>observed</code> does not transform <code>reading</code> into a const-defined object. It provides an access path whose pointed-to type is const-qualified, so an assignment through <code>*observed</code> is not allowed. Another legitimate, unqualified access path may still modify the original <code>int</code>.</p>
+          <aside class="callout callout-tip"><strong>Tip</strong><p>Separate two questions: “Was the object defined with a const-qualified type?” and “Does this particular lvalue have a const-qualified type?” They often have the same answer, but pointer conversions can make them differ.</p></aside>
+        </section>
+
+        <section aria-labelledby="pointer-qualification">
+          <h2 id="pointer-qualification">The pointer object and the pointed-to object</h2>
+          <p>A pointer declaration can qualify the pointed-to type, the pointer type, or both. Read from the declared identifier outward and notice where <code>const</code> appears relative to the <code>*</code>.</p>
+          <div class="table-scroll"><table><thead><tr><th>Declaration</th><th>Pointer object</th><th>Pointed-to access</th></tr></thead><tbody><tr><td><code>const int *p</code></td><td><code>p</code> may be reassigned.</td><td><code>*p</code> is not modifiable through <code>p</code>.</td></tr><tr><td><code>int * const p</code></td><td><code>p</code> may not be reassigned after initialization.</td><td>The pointed-to <code>int</code> may be modified through <code>p</code>.</td></tr><tr><td><code>const int * const p</code></td><td><code>p</code> may not be reassigned.</td><td><code>*p</code> is not modifiable through <code>p</code>.</td></tr></tbody></table></div>
+          <div class="code-block"><div class="code-block-header"><span>pointer-qualification.c</span></div><pre><code><span class="tok-type">int</span> first = <span class="tok-number">10</span>;
+<span class="tok-type">int</span> second = <span class="tok-number">20</span>;
+
+<span class="tok-keyword">const</span> <span class="tok-type">int</span> *view = &amp;first;
+view = &amp;second;             <span class="tok-comment">/* Valid: view itself is not const. */</span>
+
+<span class="tok-type">int</span> * <span class="tok-keyword">const</span> fixed = &amp;first;
+*fixed = <span class="tok-number">11</span>;             <span class="tok-comment">/* Valid: first is modifiable. */</span>
+<span class="tok-comment">/* fixed = &amp;second;         Not allowed: fixed is const. */</span></code></pre></div>
+          <p>In <code>int * const fixed</code>, <code>fixed</code> is itself a const-qualified pointer object. Its stored pointer value cannot be replaced through an assignment to <code>fixed</code>, but the <code>int</code> it designates is not const-qualified through <code>*fixed</code>.</p>
+        </section>
+
+        <section aria-labelledby="casting-away-const">
+          <h2 id="casting-away-const">Casting away <code>const</code> does not change the object</h2>
+          <p>An explicit cast can produce a pointer whose pointed-to type is no longer const-qualified. It cannot retroactively change how the object was defined. Whether modification is valid still depends on the actual object.</p>
+          <div class="code-block"><div class="code-block-header"><span>cast-away-const.c</span></div><pre><code><span class="tok-keyword">const</span> <span class="tok-type">int</span> fixed_value = <span class="tok-number">7</span>;
+<span class="tok-type">int</span> *attempt = (<span class="tok-type">int</span> *)&amp;fixed_value;
+
+*attempt = <span class="tok-number">8</span>; <span class="tok-comment">/* Undefined behavior. */</span></code></pre></div>
+          <p>The cast suppresses the type-system obstacle at that expression. The object <code>fixed_value</code> was still defined with a const-qualified type, so attempting to modify it produces undefined behavior. A system may place such an object in read-only storage, but a visible crash is only one possible outcome; undefined behavior does not require one.</p>
+          <p>Now compare that with an object that was not defined as const:</p>
+          <div class="code-block"><div class="code-block-header"><span>underlying-object.c</span></div><pre><code><span class="tok-type">int</span> value = <span class="tok-number">7</span>;
+<span class="tok-keyword">const</span> <span class="tok-type">int</span> *view = &amp;value;
+<span class="tok-type">int</span> *original_kind = (<span class="tok-type">int</span> *)view;
+
+*original_kind = <span class="tok-number">8</span>; <span class="tok-comment">/* Valid: value was defined as int. */</span></code></pre></div>
+          <p>This modification is valid because the underlying object is a modifiable <code>int</code>. Even so, routinely casting away qualifiers is a design warning: the caller may not know whether a pointer originally referred to a const-defined object.</p>
+          <aside class="callout callout-warning"><strong>Warning</strong><p>A cast answers a type-conversion question. It does not grant write permission, make read-only storage writable, or extend an object’s lifetime.</p></aside>
+        </section>
+
+        <section aria-labelledby="api-design">
+          <h2 id="api-design">Using <code>const</code> in interfaces</h2>
+          <p>A pointer to const-qualified data is useful when a function reads an object without modifying it through that parameter. It communicates intent to the caller and lets the compiler reject accidental assignments within the function.</p>
+          <div class="code-block"><div class="code-block-header"><span>read-only-interface.c</span></div><pre><code><span class="tok-keyword">#include</span> &lt;stddef.h&gt;
+
+<span class="tok-type">long</span> <span class="tok-function">sum_samples</span>(<span class="tok-keyword">const</span> <span class="tok-type">int</span> *samples, <span class="tok-type">size_t</span> count)
+{
+    <span class="tok-type">long</span> total = <span class="tok-number">0</span>;
+
+    <span class="tok-keyword">for</span> (<span class="tok-type">size_t</span> i = <span class="tok-number">0</span>; i &lt; count; ++i) {
+        total += samples[i];
+    }
+
+    <span class="tok-keyword">return</span> total;
+}</code></pre></div>
+          <p>This interface does not promise that no other part of the program will modify the array concurrently or later. It says that this function’s access through <code>samples</code> is read-only. Synchronization and lifetime remain separate responsibilities.</p>
+          <p>Adding qualification at the pointed-to level is commonly safe when passing an <code>int *</code> to a function expecting <code>const int *</code>. Silently removing it in the other direction would discard a protection, so a conforming implementation must diagnose the constraint violation.</p>
+        </section>
+
+        <section aria-labelledby="summary">
+          <h2 id="summary">A compact working model</h2>
+          <ol><li><code>const</code> qualifies a type; first identify exactly which type.</li><li>An object defined with a const-qualified type must not be modified.</li><li>A pointer to a const-qualified type restricts modification through that pointer; it does not necessarily mean the underlying object was defined as const.</li><li>A const-qualified pointer prevents reassignment of the pointer object, not necessarily modification of the pointed-to object.</li><li>Casting away <code>const</code> changes the expression’s type, not the definition or mutability of the underlying object.</li></ol>
+        </section>
+
+        <section class="references" aria-labelledby="references">
+          <h2 id="references">References and further reading</h2>
+          <ul><li>ISO/IEC 9899:1999, <em>Programming Languages — C</em>, topics covering type qualifiers, declarations, and assignment operators.</li><li>ISO/IEC 9899:2011, <em>Information technology — Programming languages — C</em>, topics covering qualified types, lvalues, casts, and simple assignment.</li><li>Your compiler’s C99 or C11 diagnostics with warnings enabled; small, isolated experiments are useful for observing constraint violations, but observed output cannot define undefined behavior.</li></ul>
+        </section>
+
+        <section aria-labelledby="related-title"><h2 id="related-title">Related articles</h2><ul><li><a href="pointer-values-and-object-addresses.html">Pointer Values, Object Addresses, and Dereferencing in C</a></li><li><a href="realloc-and-pointer-validity.html">What Happens to a Pointer After <code>realloc</code>?</a></li></ul></section>
+        <nav class="article-footer-nav" aria-label="Article pagination"><span></span><a href="pointer-values-and-object-addresses.html"><small>Next article</small>Pointer values and object addresses →</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>© 2026 Ömer Selçuk Aslan</p><nav class="footer-nav" aria-label="Footer navigation"><a href="../articles.html">Articles</a><a href="../contact.html">Contact</a><a href="https://www.linkedin.com/in/omerselcukaslan" rel="me noopener noreferrer" target="_blank">LinkedIn</a></nav></div></footer>
+</body>
+</html>

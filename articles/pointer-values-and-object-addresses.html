@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pointer Values, Object Addresses, and Dereferencing in C — Ömer Selçuk Aslan</title>
+  <meta name="description" content="An introductory model for pointer objects and values, address and indirection operators, null, uninitialized and dangling pointers, and correct %p usage in C.">
+  <link rel="canonical" href="https://omerselcuk.com/articles/pointer-values-and-object-addresses.html">
+  <meta property="og:type" content="article"><meta property="og:title" content="Pointer Values, Object Addresses, and Dereferencing in C"><meta property="og:description" content="A precise vocabulary for pointer objects, pointer values, addresses, and invalid pointer states."><meta property="og:url" content="https://omerselcuk.com/articles/pointer-values-and-object-addresses.html"><meta property="og:site_name" content="Ömer Selçuk Aslan"><meta property="article:published_time" content="2026-07-15"><meta property="article:modified_time" content="2026-07-15"><meta property="article:section" content="C Language">
+  <meta name="twitter:card" content="summary"><meta name="twitter:title" content="Pointer Values, Object Addresses, and Dereferencing in C"><meta name="twitter:description" content="Pointer objects, addresses, dereferencing, and invalid pointer states.">
+  <meta name="theme-color" content="#f8f8f6" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#151719" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="manifest" href="../site.webmanifest">
+  <script src="../assets/js/theme.js"></script><link rel="stylesheet" href="../assets/css/tokens.css"><link rel="stylesheet" href="../assets/css/base.css"><link rel="stylesheet" href="../assets/css/layout.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="../assets/css/pages.css"><link rel="stylesheet" href="../assets/css/article.css"><link rel="stylesheet" href="../assets/css/print.css" media="print"><script src="../assets/js/main.js" defer></script><script src="../assets/js/article.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BlogPosting","headline":"Pointer Values, Object Addresses, and Dereferencing in C","description":"An introductory model for pointer objects and values, address and indirection operators, null, uninitialized and dangling pointers, and correct %p usage in C.","datePublished":"2026-07-15","dateModified":"2026-07-15","inLanguage":"en","mainEntityOfPage":"https://omerselcuk.com/articles/pointer-values-and-object-addresses.html","author":{"@id":"https://omerselcuk.com/#person"},"publisher":{"@id":"https://omerselcuk.com/#person"},"articleSection":"C Language","keywords":["C99","C11","pointers","memory","undefined behavior"],"isPartOf":{"@id":"https://omerselcuk.com/#website"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://omerselcuk.com/"},{"@type":"ListItem","position":2,"name":"Articles","item":"https://omerselcuk.com/articles.html"},{"@type":"ListItem","position":3,"name":"Pointer Values, Object Addresses, and Dereferencing in C","item":"https://omerselcuk.com/articles/pointer-values-and-object-addresses.html"}]}}
+  </script>
+</head>
+<body data-root="nested">
+  <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
+  <a class="skip-link" href="#article-body">Skip to article</a>
+  <header class="site-header"><div class="container header-inner"><a class="brand" href="../index.html">Ömer Selçuk Aslan</a><button class="nav-toggle" type="button" data-nav-toggle aria-controls="primary-navigation" aria-expanded="false">Menu</button><nav class="site-nav" id="primary-navigation" data-site-nav data-open="false" aria-label="Primary navigation"><a href="../index.html">Home</a><a href="../about.html">About</a><a href="../experience.html">Experience</a><a href="../projects.html">Projects</a><a href="../articles.html" aria-current="page">Articles</a><a href="../contact.html">Contact</a><a href="../articles.html#article-search">Search</a></nav><button class="theme-toggle" type="button" data-theme-toggle hidden>System</button></div></header>
+  <main>
+    <header class="article-header container">
+      <p class="eyebrow">C Language</p>
+      <h1>Pointer Values, Object Addresses, and Dereferencing in C</h1>
+      <p class="article-description">A pointer is an object with a type and a stored value—not a synonym for the object it may designate. That distinction makes invalid states easier to recognize.</p>
+      <ul class="meta-list" aria-label="Article details"><li>Published <time datetime="2026-07-15">July 15, 2026</time></li><li>Updated <time datetime="2026-07-15">July 15, 2026</time></li><li>9 min read</li></ul>
+      <ul class="tag-list" aria-label="Tags"><li>C99</li><li>C11</li><li>pointers</li><li>memory</li><li>undefined behavior</li></ul>
+    </header>
+    <div class="article-layout container">
+      <nav class="article-toc" aria-labelledby="toc-title"><h2 id="toc-title">On this page</h2><ol><li><a href="#scope">Scope and terminology</a></li><li><a href="#objects-and-values">Pointer objects and values</a></li><li><a href="#address-of">Address-of operator</a></li><li><a href="#indirection">Indirection operator</a></li><li><a href="#invalid-states">Invalid pointer states</a></li><li><a href="#integer-addresses">Integers are not addresses</a></li><li><a href="#printing">Printing with %p</a></li><li><a href="#summary">Working model</a></li><li><a href="#references">References</a></li></ol></nav>
+      <article class="article-body" id="article-body" data-article-body>
+        <p>Pointer discussions become confusing when “pointer,” “address,” and “the pointed-to object” are used as interchangeable names. They are related, but they are not the same thing. A declaration creates a pointer object; evaluating that object produces a pointer value; a valid pointer value may designate an object or function. Dereferencing is an operation performed with that value.</p>
+
+        <section aria-labelledby="scope"><h2 id="scope">Scope and terminology</h2><p>This is original introductory sample content for C99 and C11. It describes ordinary object pointers and deliberately avoids treating a machine address as the complete C model. It is not a formal quotation from the ISO C standard.</p><aside class="callout callout-note"><strong>Note</strong><p>Implementations often represent a pointer as a numeric virtual or physical address, but portable C describes pointer values and the objects or functions they designate. The representation is an implementation concern.</p></aside></section>
+
+        <section aria-labelledby="objects-and-values"><h2 id="objects-and-values">Pointer objects and pointer values</h2><p>An object is a region of data storage whose contents can represent values. If the object has a pointer type, it is a <em>pointer object</em>. Like an integer object, it has its own storage and lifetime.</p>
+          <div class="code-block"><div class="code-block-header"><span>pointer-object.c</span></div><pre><code><span class="tok-type">int</span> temperature = <span class="tok-number">24</span>;
+<span class="tok-type">int</span> *sensor = &amp;temperature;
+
+<span class="tok-type">int</span> measured = *sensor;</code></pre></div>
+          <p>Here, <code>temperature</code> is an <code>int</code> object. <code>sensor</code> is a separate object of type “pointer to <code>int</code>.” The initialization stores a pointer value in <code>sensor</code>. That value designates <code>temperature</code>. The expression <code>*sensor</code> then designates the <code>int</code> object.</p>
+          <p>Two pointer objects can store equal pointer values. They remain two objects with separate storage:</p>
+          <div class="code-block"><div class="code-block-header"><span>two-pointer-objects.c</span></div><pre><code><span class="tok-type">int</span> value = <span class="tok-number">5</span>;
+<span class="tok-type">int</span> *first = &amp;value;
+<span class="tok-type">int</span> *second = first;
+
+*second = <span class="tok-number">6</span>; <span class="tok-comment">/* Modifies value. */</span>
+first = <span class="tok-keyword">NULL</span>; <span class="tok-comment">/* Does not change second. */</span></code></pre></div>
+          <p>Assigning <code>NULL</code> to <code>first</code> replaces the value stored in that pointer object. It does not modify <code>second</code> and does not modify <code>value</code>.</p>
+        </section>
+
+        <section aria-labelledby="address-of"><h2 id="address-of">The address-of operator</h2><p>The unary <code>&amp;</code> operator produces a pointer to its operand in the ordinary object case. Its result has a type derived from the operand: applying <code>&amp;</code> to an <code>int</code> object produces a value of type pointer to <code>int</code>.</p>
+          <div class="code-block"><div class="code-block-header"><span>address-of.c</span></div><pre><code><span class="tok-type">int</span> counter = <span class="tok-number">0</span>;
+<span class="tok-type">int</span> *counter_address = &amp;counter;
+<span class="tok-type">int</span> **pointer_address = &amp;counter_address;</code></pre></div>
+          <p><code>&amp;counter</code> and <code>&amp;counter_address</code> have different types and designate different objects. The first points to the <code>int</code>; the second points to the pointer object. Adding another <code>*</code> to a declaration is not decoration—it adds another level of indirection.</p>
+          <aside class="callout callout-tip"><strong>Tip</strong><p>When reading pointer code, name every object and write down the type of each full expression. This is usually faster than reasoning from punctuation alone.</p></aside>
+        </section>
+
+        <section aria-labelledby="indirection"><h2 id="indirection">The indirection operator</h2><p>The unary <code>*</code> operator uses a pointer value to designate the object or function to which it points. When <code>p</code> holds a valid pointer to an <code>int</code>, <code>*p</code> is an lvalue designating that <code>int</code>. It may be read, and it may be written if the lvalue is modifiable.</p>
+          <div class="code-block"><div class="code-block-header"><span>indirection.c</span></div><pre><code><span class="tok-type">int</span> mode = <span class="tok-number">1</span>;
+<span class="tok-type">int</span> *selected = &amp;mode;
+
+<span class="tok-type">int</span> old_mode = *selected; <span class="tok-comment">/* Read mode. */</span>
+*selected = <span class="tok-number">2</span>;            <span class="tok-comment">/* Write mode. */</span></code></pre></div>
+          <p>Indirection is only meaningful when the pointer value satisfies the requirements of the operation: it must designate a suitable live object or function, with the necessary alignment and access. A declaration such as <code>int *p</code> establishes a pointer type; it does not prove that the current stored value is safe to dereference.</p>
+        </section>
+
+        <section aria-labelledby="invalid-states"><h2 id="invalid-states">Null, uninitialized, and dangling pointers</h2>
+          <h3 id="null-pointers">Null pointers</h3><p>A null pointer value is guaranteed not to compare equal to a pointer to an object or function. It is useful as an explicit “no object” state. The macro <code>NULL</code> expands to an implementation-defined null pointer constant suitable for initialization and comparison.</p>
+          <div class="code-block"><div class="code-block-header"><span>null-check.c</span></div><pre><code><span class="tok-type">int</span> *sample = <span class="tok-keyword">NULL</span>;
+
+<span class="tok-keyword">if</span> (sample != <span class="tok-keyword">NULL</span>) {
+    <span class="tok-function">use_value</span>(*sample);
+}</code></pre></div>
+          <p>Dereferencing a null pointer has undefined behavior. Checking first is useful only if the pointer cannot become invalid between the check and the use—a concern in concurrent code.</p>
+
+          <h3 id="uninitialized-pointers">Uninitialized pointers</h3><p>An automatic pointer object without an initializer has an indeterminate value. It must be assigned a valid value or a null pointer value before code evaluates it as a pointer.</p>
+          <div class="code-block"><div class="code-block-header"><span>uninitialized.c</span></div><pre><code><span class="tok-keyword">void</span> <span class="tok-function">bad_example</span>(<span class="tok-keyword">void</span>)
+{
+    <span class="tok-type">int</span> *reading;
+    *reading = <span class="tok-number">10</span>; <span class="tok-comment">/* Undefined behavior; reading was not initialized. */</span>
+}</code></pre></div>
+          <p>Do not expect an uninitialized pointer to begin as null. Static-storage objects receive zero initialization, but an ordinary uninitialized automatic object does not receive that guarantee.</p>
+
+          <h3 id="dangling-pointers">Dangling pointers</h3><p>A pointer becomes dangling when the lifetime of its designated object ends while a copy of the pointer value remains. Returning the address of an automatic local object is a common example:</p>
+          <div class="code-block"><div class="code-block-header"><span>dangling.c</span></div><pre><code><span class="tok-type">int</span> *<span class="tok-function">wrong</span>(<span class="tok-keyword">void</span>)
+{
+    <span class="tok-type">int</span> temporary = <span class="tok-number">42</span>;
+    <span class="tok-keyword">return</span> &amp;temporary;
+} <span class="tok-comment">/* temporary's lifetime has ended. */</span></code></pre></div>
+          <p>A dynamically allocated object also reaches the end of its lifetime when it is deallocated. Copies of pointers into that allocation must not be dereferenced afterward. Assigning <code>NULL</code> to one pointer variable does not update other aliases.</p>
+          <aside class="callout callout-warning"><strong>Warning</strong><p>A non-null pointer is not necessarily valid. Null checking detects one invalid state; it does not detect uninitialized values, expired lifetimes, out-of-bounds values, misalignment, or incompatible access.</p></aside>
+        </section>
+
+        <section aria-labelledby="integer-addresses"><h2 id="integer-addresses">Why an arbitrary integer is not a valid pointer</h2><p>C provides explicit conversions between integer and pointer types, but those conversions are implementation-defined outside the special rules for null pointer constants. Converting an arbitrary number to <code>int *</code> does not create an <code>int</code> object at that location, establish alignment, begin an object lifetime, or make the resulting pointer safe to dereference.</p>
+          <div class="code-block"><div class="code-block-header"><span>not-portable.c</span></div><pre><code><span class="tok-keyword">#include</span> &lt;stdint.h&gt;
+
+uintptr_t raw = <span class="tok-number">0x40000000u</span>;
+<span class="tok-keyword">volatile</span> <span class="tok-type">unsigned</span> <span class="tok-type">int</span> *reg =
+    (<span class="tok-keyword">volatile</span> <span class="tok-type">unsigned</span> <span class="tok-type">int</span> *)raw;</code></pre></div>
+          <p>This pattern may be meaningful in a specific embedded implementation where the memory map, compiler, ABI, and device documentation jointly define the behavior. It is not portable evidence that every integer represents a usable address. Hardware register access should be isolated behind platform-specific definitions and justified by that implementation’s guarantees.</p>
+        </section>
+
+        <section aria-labelledby="printing"><h2 id="printing">Printing object pointer values with <code>%p</code></h2><p>The <code>printf</code> conversion specifier <code>%p</code> expects a corresponding argument of type <code>void *</code>. For an object pointer, explicitly convert to <code>void *</code> so that the variadic call supplies the expected type.</p>
+          <div class="code-block"><div class="code-block-header"><span>print-pointer.c</span></div><pre><code><span class="tok-keyword">#include</span> &lt;stdio.h&gt;
+
+<span class="tok-type">int</span> value = <span class="tok-number">17</span>;
+<span class="tok-type">int</span> *pointer = &amp;value;
+
+<span class="tok-function">printf</span>(<span class="tok-string">"pointer = %p\n"</span>, (<span class="tok-keyword">void</span> *)pointer);</code></pre></div>
+          <p>The textual representation is implementation-defined. Do not assume hexadecimal formatting, a fixed width, or a value suitable for parsing back into a usable pointer. The portable conversion between <code>void *</code> and other object pointer types is why this pattern applies to object pointers; function pointers require implementation-specific consideration.</p>
+        </section>
+
+        <section aria-labelledby="summary"><h2 id="summary">A compact working model</h2><ol><li>A pointer object has its own storage, type, value, and lifetime.</li><li>A pointer value can designate an object or function, represent a null pointer, or be unusable for the intended operation.</li><li><code>&amp;object</code> produces a pointer value for that object in ordinary cases.</li><li><code>*pointer</code> designates the target only when the pointer value is valid for that operation.</li><li>Null, uninitialized, and dangling are different states; a null check cannot validate every pointer.</li><li>An integer-to-pointer cast does not, by itself, create a valid object access.</li><li>Print object pointers with <code>%p</code> and a <code>void *</code> argument.</li></ol></section>
+
+        <section class="references" aria-labelledby="references"><h2 id="references">References and further reading</h2><ul><li>ISO/IEC 9899:1999, <em>Programming Languages — C</em>, topics covering objects, pointer types, address and indirection operators, conversions, and formatted I/O.</li><li>ISO/IEC 9899:2011, <em>Information technology — Programming languages — C</em>, topics covering storage duration, object lifetime, pointer conversions, and <code>fprintf</code> conversion specifications.</li><li>Target compiler and microcontroller documentation when integer-derived addresses are required for memory-mapped I/O.</li></ul></section>
+        <section aria-labelledby="related-title"><h2 id="related-title">Related articles</h2><ul><li><a href="understanding-const-in-c.html">Understanding <code>const</code> in C: Qualified Types, Objects, and Modifiable Lvalues</a></li><li><a href="realloc-and-pointer-validity.html">What Happens to a Pointer After <code>realloc</code>?</a></li></ul></section>
+        <nav class="article-footer-nav" aria-label="Article pagination"><a href="understanding-const-in-c.html"><small>Previous article</small>← Understanding const in C</a><a href="realloc-and-pointer-validity.html"><small>Next article</small>What happens after realloc? →</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>© 2026 Ömer Selçuk Aslan</p><nav class="footer-nav" aria-label="Footer navigation"><a href="../articles.html">Articles</a><a href="../contact.html">Contact</a><a href="https://www.linkedin.com/in/omerselcukaslan" rel="me noopener noreferrer" target="_blank">LinkedIn</a></nav></div></footer>
+</body>
+</html>

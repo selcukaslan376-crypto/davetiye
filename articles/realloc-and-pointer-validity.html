@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Happens to a Pointer After realloc? — Ömer Selçuk Aslan</title>
+  <meta name="description" content="A precise guide to successful and failed realloc calls, pointer validity, the temporary-pointer pattern, aliases, overflow, and zero-size requests in C.">
+  <link rel="canonical" href="https://omerselcuk.com/articles/realloc-and-pointer-validity.html">
+  <meta property="og:type" content="article"><meta property="og:title" content="What Happens to a Pointer After realloc?"><meta property="og:description" content="Successful and failed reallocation, pointer validity, and a safe temporary-pointer pattern."><meta property="og:url" content="https://omerselcuk.com/articles/realloc-and-pointer-validity.html"><meta property="og:site_name" content="Ömer Selçuk Aslan"><meta property="article:published_time" content="2026-07-15"><meta property="article:modified_time" content="2026-07-15"><meta property="article:section" content="Memory Management">
+  <meta name="twitter:card" content="summary"><meta name="twitter:title" content="What Happens to a Pointer After realloc?"><meta name="twitter:description" content="Reallocation outcomes, pointer validity, and the temporary-pointer pattern.">
+  <meta name="theme-color" content="#f8f8f6" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#151719" media="(prefers-color-scheme: dark)">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml"><link rel="manifest" href="../site.webmanifest">
+  <script src="../assets/js/theme.js"></script><link rel="stylesheet" href="../assets/css/tokens.css"><link rel="stylesheet" href="../assets/css/base.css"><link rel="stylesheet" href="../assets/css/layout.css"><link rel="stylesheet" href="../assets/css/components.css"><link rel="stylesheet" href="../assets/css/pages.css"><link rel="stylesheet" href="../assets/css/article.css"><link rel="stylesheet" href="../assets/css/print.css" media="print"><script src="../assets/js/main.js" defer></script><script src="../assets/js/article.js" defer></script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BlogPosting","headline":"What Happens to a Pointer After realloc?","description":"A precise guide to successful and failed realloc calls, pointer validity, the temporary-pointer pattern, aliases, overflow, and zero-size requests in C.","datePublished":"2026-07-15","dateModified":"2026-07-15","inLanguage":"en","mainEntityOfPage":"https://omerselcuk.com/articles/realloc-and-pointer-validity.html","author":{"@id":"https://omerselcuk.com/#person"},"publisher":{"@id":"https://omerselcuk.com/#person"},"articleSection":"Memory Management","keywords":["C99","C11","realloc","pointers","dynamic memory"],"isPartOf":{"@id":"https://omerselcuk.com/#website"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://omerselcuk.com/"},{"@type":"ListItem","position":2,"name":"Articles","item":"https://omerselcuk.com/articles.html"},{"@type":"ListItem","position":3,"name":"What Happens to a Pointer After realloc?","item":"https://omerselcuk.com/articles/realloc-and-pointer-validity.html"}]}}
+  </script>
+</head>
+<body data-root="nested">
+  <div class="reading-progress" data-reading-progress aria-hidden="true"></div>
+  <a class="skip-link" href="#article-body">Skip to article</a>
+  <header class="site-header"><div class="container header-inner"><a class="brand" href="../index.html">Ömer Selçuk Aslan</a><button class="nav-toggle" type="button" data-nav-toggle aria-controls="primary-navigation" aria-expanded="false">Menu</button><nav class="site-nav" id="primary-navigation" data-site-nav data-open="false" aria-label="Primary navigation"><a href="../index.html">Home</a><a href="../about.html">About</a><a href="../experience.html">Experience</a><a href="../projects.html">Projects</a><a href="../articles.html" aria-current="page">Articles</a><a href="../contact.html">Contact</a><a href="../articles.html#article-search">Search</a></nav><button class="theme-toggle" type="button" data-theme-toggle hidden>System</button></div></header>
+  <main>
+    <header class="article-header container">
+      <p class="eyebrow">Memory Management</p>
+      <h1>What Happens to a Pointer After <code>realloc</code>?</h1>
+      <p class="article-description"><code>realloc</code> has two main outcomes, and the validity of the old pointer is different in each. Correct code makes that branch explicit.</p>
+      <ul class="meta-list" aria-label="Article details"><li>Published <time datetime="2026-07-15">July 15, 2026</time></li><li>Updated <time datetime="2026-07-15">July 15, 2026</time></li><li>9 min read</li></ul>
+      <ul class="tag-list" aria-label="Tags"><li>C99</li><li>C11</li><li>realloc</li><li>pointers</li><li>dynamic memory</li></ul>
+    </header>
+    <div class="article-layout container">
+      <nav class="article-toc" aria-labelledby="toc-title"><h2 id="toc-title">On this page</h2><ol><li><a href="#contract">The realloc contract</a></li><li><a href="#success">Successful reallocation</a></li><li><a href="#failure">Failed reallocation</a></li><li><a href="#temporary-pattern">Temporary-pointer pattern</a></li><li><a href="#aliases">Aliases and interior pointers</a></li><li><a href="#overflow">Size calculation</a></li><li><a href="#zero-size">Zero-size requests</a></li><li><a href="#summary">Working model</a></li><li><a href="#references">References</a></li></ol></nav>
+      <article class="article-body" id="article-body" data-article-body>
+        <p><code>realloc</code> is often described as “resize this allocation.” That description hides the ownership transition that matters most: on success, the old allocated object is gone and the returned pointer refers to the resulting allocation; on failure for a nonzero request, the old allocation remains. The program must preserve enough information to handle both outcomes.</p>
+
+        <section aria-labelledby="contract"><h2 id="contract">The <code>realloc</code> contract</h2><p>The function is declared in <code>&lt;stdlib.h&gt;</code>:</p>
+          <div class="code-block"><div class="code-block-header"><span>declaration</span></div><pre><code><span class="tok-keyword">void</span> *<span class="tok-function">realloc</span>(<span class="tok-keyword">void</span> *ptr, <span class="tok-type">size_t</span> size);</code></pre></div>
+          <p>For an ordinary nonzero request, <code>ptr</code> is either a null pointer or a pointer previously returned by an allocation function and not yet deallocated. Passing a null pointer makes the call behave like an allocation request. Passing a pointer to an automatic object, an interior pointer, or an already freed allocation has undefined behavior.</p>
+          <p>If a new allocation is produced, the existing bytes are preserved up to the smaller of the old and new sizes. When the allocation grows, the additional bytes have indeterminate values; they are not automatically zero-initialized.</p>
+          <aside class="callout callout-note"><strong>Note</strong><p>This article is original introductory sample content focused on C99 and C11. It summarizes behavior in practical terms and does not quote or replace the ISO C standard.</p></aside>
+        </section>
+
+        <section aria-labelledby="success"><h2 id="success">After successful reallocation</h2><p>When <code>realloc</code> succeeds, it returns a pointer to the resulting allocated object. The old allocated object is deallocated. The returned address may look numerically identical to the old address, or the allocation may move; portable code must be correct in either case.</p>
+          <div class="code-block"><div class="code-block-header"><span>success-model.c</span></div><pre><code><span class="tok-type">int</span> *old_value = buffer;
+<span class="tok-type">int</span> *resized = <span class="tok-function">realloc</span>(buffer, new_size);
+
+<span class="tok-keyword">if</span> (resized != <span class="tok-keyword">NULL</span>) {
+    <span class="tok-comment">/* Do not evaluate old_value or buffer here. */</span>
+    buffer = resized;
+}</code></pre></div>
+          <p>The variable <code>buffer</code> still physically contains bits after the call, but after success its old pointer value no longer provides access to a live allocation. Under the C object-lifetime rules, pointer values referring to an object become indeterminate when that object reaches the end of its lifetime. Do not dereference, compare, subtract, print, or otherwise evaluate the old value after a successful call. Overwrite the owner variable with the returned value.</p>
+          <p>This is stricter—and safer—than saying “do not use the old pointer only if the block moved.” The program cannot test whether it moved by comparing the result with the now-invalid old pointer. It does not need to know.</p>
+          <aside class="callout callout-warning"><strong>Warning</strong><p>Even when an implementation returns the same numerical address, success ends the old allocated object’s lifetime. Reason from the allocation contract, not from printed addresses.</p></aside>
+        </section>
+
+        <section aria-labelledby="failure"><h2 id="failure">After failed reallocation</h2><p>For a nonzero size request, failure is reported with a null pointer. The original allocation is not deallocated, and the original pointer remains the program’s way to access or eventually free it.</p>
+          <div class="code-block"><div class="code-block-header"><span>failure-branch.c</span></div><pre><code><span class="tok-type">int</span> *resized = <span class="tok-function">realloc</span>(buffer, new_size);
+
+<span class="tok-keyword">if</span> (resized == <span class="tok-keyword">NULL</span>) {
+    <span class="tok-comment">/* buffer still refers to the original allocation. */</span>
+    <span class="tok-function">report_allocation_failure</span>();
+} <span class="tok-keyword">else</span> {
+    buffer = resized;
+}</code></pre></div>
+          <p>This asymmetric result is useful: a failed growth request does not destroy existing data. It also explains why code must not replace the only owner pointer before it knows whether the call succeeded.</p>
+        </section>
+
+        <section aria-labelledby="temporary-pattern"><h2 id="temporary-pattern">The temporary-pointer pattern</h2><p>Assigning the result directly to the original pointer combines the result variable and the owner variable too early:</p>
+          <div class="code-block"><div class="code-block-header"><span>wrong.c</span></div><pre><code>buffer = <span class="tok-function">realloc</span>(buffer, new_size);
+<span class="tok-keyword">if</span> (buffer == <span class="tok-keyword">NULL</span>) {
+    <span class="tok-comment">/* The original allocation still exists, but its pointer was lost. */</span>
+}</code></pre></div>
+          <p>On failure, <code>realloc</code> returns null and the assignment overwrites the only saved pointer. The allocation is now unreachable through the program’s intended owner: a memory leak.</p>
+          <p>Keep the result separate until the branch is known:</p>
+          <div class="code-block"><div class="code-block-header"><span>resize-array.c</span></div><pre><code><span class="tok-keyword">#include</span> &lt;stddef.h&gt;
+<span class="tok-keyword">#include</span> &lt;stdlib.h&gt;
+
+<span class="tok-type">int</span> <span class="tok-function">resize_samples</span>(<span class="tok-type">int</span> **samples, <span class="tok-type">size_t</span> count)
+{
+    <span class="tok-type">int</span> *resized = <span class="tok-function">realloc</span>(*samples, count * <span class="tok-keyword">sizeof</span> **samples);
+
+    <span class="tok-keyword">if</span> (resized == <span class="tok-keyword">NULL</span>) {
+        <span class="tok-keyword">return</span> <span class="tok-number">0</span>;
+    }
+
+    *samples = resized;
+    <span class="tok-keyword">return</span> <span class="tok-number">1</span>;
+}</code></pre></div>
+          <p>This function assumes <code>count</code> is nonzero and that the multiplication has already been shown safe; the next sections address both qualifications. On failure, <code>*samples</code> remains unchanged. On success, the assignment replaces its indeterminate old pointer value without first evaluating that value.</p>
+          <aside class="callout callout-tip"><strong>Tip</strong><p>Name the temporary after the outcome—<code>resized</code> or <code>new_buffer</code>—and update the owner immediately after the null check. This keeps the lifetime transition visible.</p></aside>
+        </section>
+
+        <section aria-labelledby="aliases"><h2 id="aliases">Aliases and interior pointers</h2><p>Updating the main owner pointer does not repair other pointer objects that referred to the old allocation. After successful reallocation, every saved pointer into the old object—including pointers to its elements—is invalid.</p>
+          <div class="code-block"><div class="code-block-header"><span>stale-alias.c</span></div><pre><code><span class="tok-type">int</span> *third = &amp;buffer[<span class="tok-number">2</span>];
+<span class="tok-type">int</span> *resized = <span class="tok-function">realloc</span>(buffer, new_count * <span class="tok-keyword">sizeof</span> *buffer);
+
+<span class="tok-keyword">if</span> (resized != <span class="tok-keyword">NULL</span>) {
+    buffer = resized;
+    <span class="tok-comment">/* third is invalid; derive it again if index 2 still exists. */</span>
+    third = &amp;buffer[<span class="tok-number">2</span>];
+}</code></pre></div>
+          <p>The safe general approach is to store stable logical information—such as an index—across the call and derive interior pointers again from the returned allocation. The example also requires <code>new_count &gt; 2</code> before reconstructing <code>third</code>.</p>
+        </section>
+
+        <section aria-labelledby="overflow"><h2 id="overflow">Check the size calculation first</h2><p><code>realloc</code> receives a byte count. When a program multiplies an element count by an element size, unsigned <code>size_t</code> arithmetic can wrap before the function is called. The allocator then receives a smaller, apparently valid request.</p>
+          <div class="code-block"><div class="code-block-header"><span>checked-size.c</span></div><pre><code><span class="tok-keyword">#include</span> &lt;stdint.h&gt;
+<span class="tok-keyword">#include</span> &lt;stdlib.h&gt;
+
+<span class="tok-keyword">if</span> (new_count &gt; SIZE_MAX / <span class="tok-keyword">sizeof</span> *buffer) {
+    <span class="tok-comment">/* Requested byte count is not representable. */</span>
+    <span class="tok-keyword">return</span> RESIZE_FAILED;
+}
+
+<span class="tok-type">size_t</span> bytes = new_count * <span class="tok-keyword">sizeof</span> *buffer;
+<span class="tok-type">int</span> *resized = <span class="tok-function">realloc</span>(buffer, bytes);</code></pre></div>
+          <p>Using <code>sizeof *buffer</code> keeps the allocation tied to the pointed-to type and avoids repeating that type in the expression. The overflow check belongs before the multiplication.</p>
+        </section>
+
+        <section aria-labelledby="zero-size"><h2 id="zero-size">Treat zero-size requests cautiously</h2><p>The C99 and C11 specifications permit implementation-defined behavior when the requested size is zero. The call may return a null pointer, or it may return a value that must not be used to access an object. Later language revisions and implementations add further historical complications.</p>
+          <p>A null result is therefore not a portable failure signal when the requested size is zero. Code that wants “resize to zero” is clearer when it handles that policy before calling <code>realloc</code>:</p>
+          <div class="code-block"><div class="code-block-header"><span>explicit-zero-policy.c</span></div><pre><code><span class="tok-keyword">if</span> (new_count == <span class="tok-number">0</span>) {
+    <span class="tok-function">free</span>(buffer);
+    buffer = <span class="tok-keyword">NULL</span>;
+    capacity = <span class="tok-number">0</span>;
+    <span class="tok-keyword">return</span> RESIZE_OK;
+}</code></pre></div>
+          <p>This avoids depending on an implementation’s zero-size convention and leaves the owner in an explicit state. A project targeting a particular C revision and platform should document any different policy.</p>
+        </section>
+
+        <section aria-labelledby="summary"><h2 id="summary">A compact working model</h2><ol><li>For a nonzero request, null means failure and the original allocation remains live.</li><li>A non-null result means success; the old allocated object is gone.</li><li>After success, do not evaluate the old pointer value—even if the returned address appears unchanged.</li><li>Use a temporary pointer so failure cannot overwrite the only owner.</li><li>Rebuild pointers into the allocation after success; old aliases and interior pointers are invalid.</li><li>Check count-times-size overflow before calling <code>realloc</code>.</li><li>Handle a desired zero capacity explicitly instead of using a zero-size result as a portable success-or-failure test.</li></ol></section>
+
+        <section class="references" aria-labelledby="references"><h2 id="references">References and further reading</h2><ul><li>ISO/IEC 9899:1999, <em>Programming Languages — C</em>, topics covering object lifetime and memory-management functions.</li><li>ISO/IEC 9899:2011, <em>Information technology — Programming languages — C</em>, topics covering allocated objects, <code>realloc</code>, <code>free</code>, and indeterminate values.</li><li>The C library documentation supplied with the target toolchain, especially for documented implementation behavior around zero-size allocation requests.</li></ul></section>
+        <section aria-labelledby="related-title"><h2 id="related-title">Related articles</h2><ul><li><a href="pointer-values-and-object-addresses.html">Pointer Values, Object Addresses, and Dereferencing in C</a></li><li><a href="understanding-const-in-c.html">Understanding <code>const</code> in C: Qualified Types, Objects, and Modifiable Lvalues</a></li></ul></section>
+        <nav class="article-footer-nav" aria-label="Article pagination"><a href="pointer-values-and-object-addresses.html"><small>Previous article</small>← Pointer values and object addresses</a><span></span></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><p>© 2026 Ömer Selçuk Aslan</p><nav class="footer-nav" aria-label="Footer navigation"><a href="../articles.html">Articles</a><a href="../contact.html">Contact</a><a href="https://www.linkedin.com/in/omerselcukaslan" rel="me noopener noreferrer" target="_blank">LinkedIn</a></nav></div></footer>
+</body>
+</html>
